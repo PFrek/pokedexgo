@@ -2,10 +2,17 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
-	"strings"
+	// "strings"
 )
+
+type command struct {
+	name        string
+	description string
+	callback    func() error
+}
 
 func printPrompt() {
 	fmt.Print("pokedex > ")
@@ -21,14 +28,62 @@ func getInput(scanner *bufio.Scanner) string {
 	return ""
 }
 
+func runCommand(input string) error {
+	validCommands := getValidCommands()
+	command, ok := validCommands[input]
+	if !ok {
+		return errors.New(fmt.Sprintf("invalid command %s", input))
+	}
+
+	return command.callback()
+}
+
+func getValidCommands() map[string]command {
+	return map[string]command{
+		"help": {
+			name:        "help",
+			description: "Displays a help message",
+			callback:    commandHelp,
+		},
+		"exit": {
+			name:        "exit",
+			description: "Exit the Pokedex",
+			callback:    commandExit,
+		},
+	}
+}
+
+func commandHelp() error {
+	validCommands := getValidCommands()
+	fmt.Println("Usage:")
+	fmt.Println()
+
+	for _, command := range validCommands {
+		fmt.Printf("%s: %s\n", command.name, command.description)
+	}
+
+	fmt.Println()
+	return nil
+}
+
+func commandExit() error {
+	fmt.Println("Exiting the Pokedex...")
+	return nil
+}
+
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
+
 	for {
 		printPrompt()
 		textInput := getInput(scanner)
 
-		fmt.Println(textInput)
-		if strings.ToLower(textInput) == "exit" {
+		err := runCommand(textInput)
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
+
+		if textInput == "exit" {
 			break
 		}
 	}
