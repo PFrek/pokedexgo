@@ -89,7 +89,25 @@ func getValidCommands() map[string]command {
 			description: "View the information of caught pokemon",
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "List all the caught pokemon",
+			callback:    commandPokedex,
+		},
 	}
+}
+
+func commandPokedex(config *commandConfig, _ string) error {
+	fmt.Println("Your Pokedex:")
+	if len(config.Pokedex) == 0 {
+		fmt.Println("[No entries found]")
+		return nil
+	}
+
+	for name := range config.Pokedex {
+		fmt.Printf("- %s\n", name)
+	}
+	return nil
 }
 
 func commandInspect(config *commandConfig, pokemonName string) error {
@@ -128,7 +146,7 @@ func commandCatch(config *commandConfig, pokemonName string) error {
 	fmt.Printf("Throwing a Pokeball at %s...\n", pokemonName)
 	result, err := pokeapi.GetPokemon(pokemonName, config.Cache)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to get location pokemon: %v", err))
+		return errors.New(fmt.Sprintf("Failed to get pokemon: %v", err))
 	}
 
 	caught := caughtPokemon(result.BaseExperience)
