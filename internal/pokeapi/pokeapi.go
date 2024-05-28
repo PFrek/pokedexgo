@@ -35,7 +35,6 @@ func GetLocations(pageUrl *string, cache *pokecache.Cache) (*LocationsResult, er
 
 	cachedValue, ok := cache.Get(url)
 	if ok {
-		fmt.Println("Cache hit, using cached value")
 		return parseLocationsJson(cachedValue)
 	}
 
@@ -70,7 +69,6 @@ func GetLocationPokemon(locationName string, cache *pokecache.Cache) ([]string, 
 
 	cachedValue, ok := cache.Get(url)
 	if ok {
-		fmt.Println("Cache hit, using cached value")
 		result, err := parseLocationJson(cachedValue)
 		if err != nil {
 			return nil, err
@@ -126,7 +124,6 @@ func GetPokemon(pokemonName string, cache *pokecache.Cache) (*PokemonResult, err
 
 	cachedValue, ok := cache.Get(url)
 	if ok {
-		fmt.Println("Cache hit, using cached value")
 		return parsePokemonJson(cachedValue)
 	}
 

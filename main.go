@@ -84,6 +84,39 @@ func getValidCommands() map[string]command {
 			description: "Attempt to catch the specified pokemon",
 			callback:    commandCatch,
 		},
+		"inspect": {
+			name:        "inspect",
+			description: "View the information of caught pokemon",
+			callback:    commandInspect,
+		},
+	}
+}
+
+func commandInspect(config *commandConfig, pokemonName string) error {
+	if len(pokemonName) == 0 {
+		return errors.New("pokemonName cannot be empty")
+	}
+
+	data, ok := config.Pokedex[pokemonName]
+	if !ok {
+		return errors.New(fmt.Sprintf("%s has not been caught yet", pokemonName))
+	}
+
+	printPokemonData(data)
+	return nil
+}
+
+func printPokemonData(data pokeapi.PokemonResult) {
+	fmt.Printf("Name: %s\n", data.Name)
+	fmt.Printf("Height: %v\n", data.Height)
+	fmt.Printf("Weight: %v\n", data.Weight)
+	fmt.Println("Stats:")
+	for _, stat := range data.Stats {
+		fmt.Printf("- %s: %v\n", stat.Stat.Name, stat.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, t := range data.Types {
+		fmt.Printf("- %s\n", t.Type.Name)
 	}
 }
 
@@ -108,9 +141,6 @@ func commandCatch(config *commandConfig, pokemonName string) error {
 	fmt.Printf("%s was caught!\n", pokemonName)
 	config.Pokedex[pokemonName] = *result
 
-	for pokemon := range config.Pokedex {
-		fmt.Println(pokemon)
-	}
 	return nil
 }
 
