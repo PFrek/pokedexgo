@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -16,6 +17,7 @@ type commandConfig struct {
 	Next     *string
 	Previous *string
 	Cache    *pokecache.Cache
+	Pokedex  map[string]pokeapi.PokemonResult
 }
 
 type command struct {
@@ -77,7 +79,50 @@ func getValidCommands() map[string]command {
 			description: "Find the pokemon in the specified location",
 			callback:    commandExplore,
 		},
+		"catch": {
+			name:        "catch",
+			description: "Attempt to catch the specified pokemon",
+			callback:    commandCatch,
+		},
 	}
+}
+
+func commandCatch(config *commandConfig, pokemonName string) error {
+	if len(pokemonName) == 0 {
+		return errors.New("pokemonName cannot be empty")
+	}
+
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemonName)
+	result, err := pokeapi.GetPokemon(pokemonName, config.Cache)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to get location pokemon: %v", err))
+	}
+
+	caught := caughtPokemon(result.BaseExperience)
+
+	if !caught {
+		fmt.Printf("%s escaped!\n", pokemonName)
+		return nil
+	}
+
+	fmt.Printf("%s was caught!\n", pokemonName)
+	config.Pokedex[pokemonName] = *result
+
+	for pokemon := range config.Pokedex {
+		fmt.Println(pokemon)
+	}
+	return nil
+}
+
+func caughtPokemon(baseExp int) bool {
+	target := 50 - 5*(baseExp/50)
+
+	if target <= 0 {
+		target = 1
+	}
+
+	roll := rand.Intn(100)
+	return roll < target
 }
 
 func commandExplore(config *commandConfig, locationName string) error {
@@ -159,6 +204,7 @@ func main() {
 		Next:     &initialNext,
 		Previous: nil,
 		Cache:    pokecache.NewCache(5 * time.Minute),
+		Pokedex:  make(map[string]pokeapi.PokemonResult),
 	}
 
 	for {
